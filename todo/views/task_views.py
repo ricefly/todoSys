@@ -7,6 +7,8 @@ from django.http import JsonResponse
 from django.db.models import Q # 用于复杂查询
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from datetime import datetime
+from django.core.paginator import Paginator # 导入 Paginator
 
 from todo.models import Task, Category
 from todo.forms import TaskForm
@@ -16,46 +18,49 @@ class TaskListView(LoginRequiredMixin, ListView):
     model = Task
     template_name = 'task/list.html'
     context_object_name = 'tasks'
+    paginate_by = 10 # 每页显示10条任务
     
     def get_queryset(self):
-        queryset = Task.objects.filter(user=self.request.user).order_by('-created_at')
+        queryset = super().get_queryset().filter(user=self.request.user).order_by('-created_at')
         
-        # 获取筛选参数
-        status = self.request.GET.get('status')
+        # 筛选条件
         category_id = self.request.GET.get('category')
+        status = self.request.GET.get('status')
         priority = self.request.GET.get('priority')
-        search = self.request.GET.get('search')
+        due_date_before = self.request.GET.get('due_date_before')
+        search_query = self.request.GET.get('q')
         
-        # 应用筛选条件
-        if status:
-            queryset = queryset.filter(status=status)
         if category_id:
             queryset = queryset.filter(category_id=category_id)
+        if status:
+            queryset = queryset.filter(status=status)
         if priority:
             queryset = queryset.filter(priority=priority)
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search) | 
-                Q(description__icontains=search)
-            )
+        if due_date_before:
+            try:
+                # 注意：datetime-local 的值是 'YYYY-MM-DDTHH:MM' 格式
+                due_date_before_dt = datetime.strptime(due_date_before, '%Y-%m-%dT%H:%M')
+                queryset = queryset.filter(due_date__lte=due_date_before_dt)
+            except ValueError:
+                # 处理日期格式错误，可以选择忽略或返回错误信息
+                pass
+        if search_query:
+            queryset = queryset.filter(Q(title__icontains=search_query) | Q(description__icontains=search_query))
         
         return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.filter(user=self.request.user)
-        context['current_status'] = self.request.GET.get('status')
-        context['current_category'] = self.request.GET.get('category')
-        context['current_priority'] = self.request.GET.get('priority')
-        context['search_query'] = self.request.GET.get('search')
+        context['status_choices'] = Task.STATUS_CHOICES
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['selected_priority'] = self.request.GET.get('priority', '')
+        context['selected_due_date_before'] = self.request.GET.get('due_date_before', '')
+        context['search_query'] = self.request.GET.get('q', '')
         
-        # 添加状态选项
-        context['status_choices'] = [
-            ('not_started', '未开始'),
-            ('in_progress', '进行中'),
-            ('completed', '已完成')
-        ]
-        
+        # Paginator 会自动在 ListView 中处理，并通过 page_obj 传递到模板
+        # 这里只需要确保 context 中包含了 paginate_by 指定的每页对象即可
         return context
 
 class TaskCreateView(LoginRequiredMixin, CreateView):

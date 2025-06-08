@@ -28,7 +28,7 @@
                         
                         <!-- 头像显示 -->
                         <div class="text-center mb-4">
-                            <img src="{{ user.avatar.url|default:'/static/images/default-avatar.png' }}" 
+                            <img src="{% if user.avatar and user.avatar.name %}{{ user.avatar.url }}{% else %}{% static 'img/default_avatar.jpg' %}{% endif %}" 
                                  alt="头像" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
                         </div>
 

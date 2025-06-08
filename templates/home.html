@@ -67,7 +67,7 @@
                 {% if user.is_authenticated %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle py-1" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'img/default_avatar.png' %}{% endif %}" alt="头像" class="rounded-circle me-2" width="50" height="50">
+                        <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'img/default_avatar.jpg' %}{% endif %}" alt="头像" class="rounded-circle me-2" width="50" height="50">
                         <span class="fs-4">{{ user.username }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">

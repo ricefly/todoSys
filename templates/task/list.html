@@ -54,21 +54,21 @@
                     <label for="id_priority" class="col-form-label">优先级:</label>
                 </div>
                 <div class="col-auto">
-                    <input type="number" class="form-control" id="id_priority" name="priority" value="{{ selected_priority }}" placeholder="优先级">
+                    <input type="number" class="form-control" id="id_priority" name="priority" value="{{ selected_priority|default_if_none:'' }}" placeholder="优先级">
                 </div>
 
                 <div class="col-auto">
                     <label for="id_due_date_before" class="col-form-label">截止日期前:</label>
                 </div>
                 <div class="col-auto">
-                    <input type="datetime-local" class="form-control" id="id_due_date_before" name="due_date_before" value="{{ selected_due_date_before }}">
+                    <input type="datetime-local" class="form-control" id="id_due_date_before" name="due_date_before" value="{{ selected_due_date_before|default_if_none:'' }}">
                 </div>
 
                 <div class="col-auto">
                     <label for="id_search_query" class="col-form-label">搜索:</label>
                 </div>
                 <div class="col-auto">
-                    <input type="text" class="form-control" id="id_search_query" name="q" value="{{ search_query }}" placeholder="标题或描述">
+                    <input type="text" class="form-control" id="id_search_query" name="q" value="{{ search_query|default_if_none:'' }}" placeholder="标题或描述">
                 </div>
 
                 <div class="col-auto">
@@ -119,6 +119,33 @@
             </tbody>
         </table>
     </div>
+
+    <!-- 分页导航 -->
+    <nav aria-label="任务分页导航">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&category={{ selected_category }}&status={{ selected_status }}&priority={{ selected_priority }}&due_date_before={{ selected_due_date_before }}&q={{ search_query }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for i in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}&category={{ selected_category }}&status={{ selected_status }}&priority={{ selected_priority }}&due_date_before={{ selected_due_date_before }}&q={{ search_query }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&category={{ selected_category }}&status={{ selected_status }}&priority={{ selected_priority }}&due_date_before={{ selected_due_date_before }}&q={{ search_query }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
 
     <form method="post" action="{% url 'task_bulk_action' %}" id="bulkActionForm">
         {% csrf_token %}
