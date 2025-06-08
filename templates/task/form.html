@@ -1,0 +1,117 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block title %}
+    {% if task %}编辑任务{% else %}新建任务{% endif %} - 待办事项管理系统
+{% endblock %}
+
+{% block main_dashboard_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% if messages %}
+            <div class="messages mb-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center mb-0">
+                        {% if task %}编辑任务{% else %}新建任务{% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- 任务标题 -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">任务标题</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ task.title|default:'' }}" required>
+                        </div>
+
+                        <!-- 任务描述 -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">任务描述</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="3">{{ task.description|default:'' }}</textarea>
+                        </div>
+
+                        <!-- 分类选择 -->
+                        <div class="mb-3">
+                            <label for="category" class="form-label">所属分类</label>
+                            <select class="form-select" id="category" name="category">
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if task.category_id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- 任务状态 -->
+                        <div class="mb-3">
+                            <label for="status" class="form-label">任务状态</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="not_started" {% if task.status == 'not_started' %}selected{% endif %}>未开始</option>
+                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>进行中</option>
+                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>已完成</option>
+                            </select>
+                        </div>
+
+                        <!-- 截止时间 -->
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">截止时间</label>
+                            <input type="datetime-local" class="form-control" id="due_date" name="due_date"
+                                   value="{{ task.due_date|date:'Y-m-d\TH:i'|default:'' }}">
+                            <div class="form-text">可以选择具体的日期和时间</div>
+                        </div>
+
+                        <!-- 优先级 -->
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">优先级</label>
+                            <input type="number" class="form-control" id="priority" name="priority"
+                                   value="{{ task.priority|default:'0' }}" min="0" max="10">
+                            <div class="form-text">数字越大优先级越高（0-10）</div>
+                        </div>
+
+
+
+                        <!-- 提交按钮 -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {% if task %}保存修改{% else %}创建任务{% endif %}
+                            </button>
+                            <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">返回列表</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置截止时间输入框的最小值为当前时间
+    const dueDateInput = document.getElementById('due_date');
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    dueDateInput.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+});
+</script>
+{% endblock %}
+{% endblock %} 

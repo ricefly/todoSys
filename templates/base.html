@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}待办事项管理系统{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap5/css/bootstrap.min.css' %}">
+    <style>
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        .user-dropdown {
+            padding: 0.5rem 1rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <!-- 导航栏 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="/">待办事项管理系统</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <!-- 左侧导航项 -->
+                    </ul>
+                    {% if user.is_authenticated %}
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center user-dropdown" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="{{ user.avatar.url|default:'/static/images/default-avatar.png' }}" 
+                                     alt="头像" 
+                                     class="rounded-circle me-2" 
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                <span class="user-name">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">个人资料</a></li>
+                                <li><a class="dropdown-item" href="{% url 'password_change' %}">修改密码</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">退出登录</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    {% else %}
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">登录</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">注册</a>
+                        </li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mt-4">
+        {% block content %}
+        <!-- 子模板内容 -->
+        {% endblock %}
+    </main>
+
+    <footer class="text-center mt-5">
+        <p>&copy; 2025 待办事项管理系统</p>
+    </footer>
+
+    <script src="{% static 'plugins/jquery/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap5/js/bootstrap.bundle.min.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

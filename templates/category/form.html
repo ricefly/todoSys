@@ -1,0 +1,83 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block title %}
+    {% if category %}编辑分类{% else %}新建分类{% endif %} - 待办事项管理系统
+{% endblock %}
+
+{% block main_dashboard_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            {% if messages %}
+            <div class="messages mb-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center mb-0">
+                        {% if category %}编辑分类{% else %}新建分类{% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- 分类名称 -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">分类名称</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ category.name|default:'' }}" required>
+                        </div>
+
+                        <!-- 颜色选择器 -->
+                        <div class="mb-3">
+                            <label for="color" class="form-label">分类颜色</label>
+                            <div class="input-group">
+                                <input type="color" class="form-control form-control-color" 
+                                       id="color" name="color" 
+                                       value="{{ category.color|default:'#808080' }}"
+                                       title="选择分类颜色">
+                                <span class="input-group-text">
+                                    <i class="fas fa-palette"></i>
+                                </span>
+                            </div>
+                            <div class="form-text">点击颜色框可以打开颜色选择器</div>
+                        </div>
+
+                        <!-- 提交按钮 -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {% if category %}保存修改{% else %}创建分类{% endif %}
+                            </button>
+                            <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">返回列表</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取颜色选择器元素
+    const colorPicker = document.getElementById('color');
+    
+    // 添加颜色预览功能
+    colorPicker.addEventListener('input', function(e) {
+        // 可以在这里添加实时预览效果
+        console.log('选择的颜色:', e.target.value);
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

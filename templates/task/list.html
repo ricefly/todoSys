@@ -1,0 +1,192 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block title %}任务管理 - 待办事项管理系统{% endblock %}
+
+{% block main_dashboard_content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">任务管理</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{% url 'task_create' %}" class="btn btn-sm btn-outline-secondary">新建任务</a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row mb-3">
+        <div class="col">
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label for="id_category" class="col-form-label">分类:</label>
+                </div>
+                <div class="col-auto">
+                    <select class="form-select" id="id_category" name="category">
+                        <option value="">所有分类</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <label for="id_status" class="col-form-label">状态:</label>
+                </div>
+                <div class="col-auto">
+                    <select class="form-select" id="id_status" name="status">
+                        <option value="">所有状态</option>
+                        {% for choice_value, choice_label in status_choices %}
+                            <option value="{{ choice_value }}" {% if selected_status == choice_value %}selected{% endif %}>{{ choice_label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-auto">
+                    <label for="id_priority" class="col-form-label">优先级:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="number" class="form-control" id="id_priority" name="priority" value="{{ selected_priority }}" placeholder="优先级">
+                </div>
+
+                <div class="col-auto">
+                    <label for="id_due_date_before" class="col-form-label">截止日期前:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="datetime-local" class="form-control" id="id_due_date_before" name="due_date_before" value="{{ selected_due_date_before }}">
+                </div>
+
+                <div class="col-auto">
+                    <label for="id_search_query" class="col-form-label">搜索:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="text" class="form-control" id="id_search_query" name="q" value="{{ search_query }}" placeholder="标题或描述">
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">筛选</button>
+                    <a href="{% url 'task_list' %}" class="btn btn-secondary">重置</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select_all_tasks"></th>
+                    <th>标题</th>
+                    <th>描述</th>
+                    <th>状态</th>
+                    <th>截止日期</th>
+                    <th>优先级</th>
+                    <th>分类</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td><input type="checkbox" name="task_ids" value="{{ task.pk }}" class="task-checkbox"></td>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.description|truncatechars:50 }}</td>
+                    <td>{{ task.get_status_display }}</td>
+                    <td>{{ task.due_date|date:"Y-m-d H:i"|default:"N/A" }}</td>
+                    <td>{{ task.priority }}</td>
+                    <td>{{ task.category.name|default:"未分类" }}</td>
+                    <td>
+                        <a href="{% url 'task_update' task.pk %}" class="btn btn-info btn-sm me-1">编辑</a>
+                        <form action="{% url 'task_delete' task.pk %}" method="post" class="d-inline" onsubmit="return confirm('确定要删除任务 {{ task.title }} 吗？');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">暂无任务。</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <form method="post" action="{% url 'task_bulk_action' %}" id="bulkActionForm">
+        {% csrf_token %}
+        <div class="row align-items-center mt-3">
+            <div class="col-md-auto">
+                <label for="bulk_action_select" class="form-label me-2">批量操作:</label>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="bulk_action_select" name="action">
+                    <option value="">选择操作</option>
+                    <option value="mark_completed">标记为已完成</option>
+                    <option value="mark_in_progress">标记为进行中</option>
+                    <option value="mark_not_started">标记为未开始</option>
+                    <option value="delete_selected">删除选中任务</option>
+                </select>
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-warning" id="apply_bulk_action">应用</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock main_dashboard_content %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('select_all_tasks').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.task-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    document.getElementById('apply_bulk_action').addEventListener('click', function(event) {
+        const selectedAction = document.getElementById('bulk_action_select').value;
+        const checkedTasks = document.querySelectorAll('.task-checkbox:checked');
+        const bulkActionForm = document.getElementById('bulkActionForm');
+
+        if (selectedAction === '') {
+            alert('请选择一个批量操作。');
+            event.preventDefault();
+            return;
+        }
+
+        if (checkedTasks.length === 0) {
+            alert('请至少选择一个任务进行操作。');
+            event.preventDefault();
+            return;
+        }
+
+        if (selectedAction === 'delete_selected') {
+            if (!confirm('确定要删除选中的任务吗？此操作不可撤销！')) {
+                event.preventDefault();
+                return;
+            }
+        }
+
+        // 动态添加选中的任务ID到批量操作表单
+        checkedTasks.forEach(checkbox => {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'task_ids';
+            hiddenInput.value = checkbox.value;
+            bulkActionForm.appendChild(hiddenInput);
+        });
+
+        // 提交表单
+        bulkActionForm.submit();
+    });
+</script>
+{% endblock %} 
